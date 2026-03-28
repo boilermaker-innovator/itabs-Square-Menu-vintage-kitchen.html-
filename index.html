@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bakso Baroka — SquareMenu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#8a6f30;--bg:#0a0a0a;--card:#141414;--card2:#1c1c1c;--text:#f0ead8;--muted:#7a7060;--green:#4CAF50;--red:#e05252;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;overflow-x:hidden;}
+
+/* HEADER */
+.header{background:var(--card);padding:18px 20px 14px;border-bottom:1px solid #222;position:sticky;top:0;z-index:100;}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.brand{font-family:"Playfair Display",serif;font-size:22px;color:var(--gold);line-height:1.1;}
+.brand span{font-size:11px;color:var(--muted);display:block;font-family:"DM Sans",sans-serif;font-weight:300;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.halal-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--gold-dim);margin-top:6px;letter-spacing:1px;text-transform:uppercase;}
+.halal-badge::before{content:"✦";}
+.cats{display:flex;gap:8px;padding:14px 20px 0;overflow-x:auto;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cat{flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:500;border:1px solid #333;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.cat.active{background:var(--gold);color:#000;border-color:var(--gold);}
+.free-banner{margin:14px 16px 0;background:linear-gradient(135deg,#1a1500,#2a2000);border:1px solid var(--gold-dim);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--gold);display:flex;align-items:center;gap:8px;}
+.tap-hint{margin:10px 20px 0;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+
+/* MENU */
+.section-title{font-family:"Playfair Display",serif;font-size:15px;color:var(--gold-dim);letter-spacing:2px;text-transform:uppercase;padding:18px 20px 10px;}
+.menu-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;}
+.item{background:var(--card);border-radius:12px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid #1e1e1e;transition:border-color 0.2s;}
+.item.in-cart{border-color:var(--gold-dim);}
+.item-info{flex:1;}
+.dish-name{font-size:17px;font-weight:500;cursor:pointer;display:inline;border-bottom:1px dashed var(--gold-dim);}
+.item-desc{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.item-price{font-family:"Playfair Display",serif;font-size:18px;color:var(--gold);margin-top:6px;}
+.qty-control{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.qty-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.qty-btn:active{background:var(--gold);color:#000;transform:scale(0.9);}
+.qty-btn.add-btn{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold;}
+.qty-num{font-size:15px;font-weight:500;min-width:16px;text-align:center;}
+.extras-section{padding:0 16px 100px;}
+.extra-item{background:var(--card);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border:1px solid #1e1e1e;}
+.extra-add{width:28px;height:28px;border-radius:50%;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.extra-add.added{background:var(--gold);color:#000;}
+
+/* CART BAR */
+.cart-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:398px;background:var(--gold);color:#000;border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;box-shadow:0 8px 32px rgba(201,168,76,0.3);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.cart-bar.visible{opacity:1;pointer-events:all;}
+.cart-bar:active{transform:translateX(-50%) scale(0.98);}
+.cart-count{background:#000;color:var(--gold);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+.cart-total{font-family:"Playfair Display",serif;font-size:18px;font-weight:700;}
+
+/* POPUP */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.popup-overlay.open{opacity:1;pointer-events:all;}
+.dish-popup{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:var(--card);border-radius:24px 24px 0 0;z-index:600;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);max-height:88vh;overflow-y:auto;}
+.dish-popup.open{transform:translateX(-50%) translateY(0);}
+.popup-handle{width:40px;height:4px;background:#333;border-radius:2px;margin:12px auto 0;}
+.popup-img-wrap{width:100%;height:200px;overflow:hidden;position:relative;background:#1a1a1a;}
+.popup-img-wrap img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.4s;}
+.popup-img-wrap img.loaded{opacity:1;}
+.popup-img-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#1a1500,#1c1c1c);}
+.popup-close-btn{position:absolute;top:16px;right:16px;width:32px;height:32px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;}
+.popup-body{padding:18px 20px 32px;}
+.popup-dish-name{font-family:"Playfair Display",serif;font-size:24px;margin-bottom:4px;}
+.popup-price{font-family:"Playfair Display",serif;font-size:18px;color:var(--gold);margin-bottom:12px;}
+.lang-toggle{display:flex;background:#1e1e1e;border-radius:20px;padding:3px;margin-bottom:14px;width:fit-content;gap:2px;}
+.lang-btn{padding:5px 12px;border-radius:16px;border:none;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:"DM Sans",sans-serif;transition:all 0.2s;}
+.lang-btn.active{background:var(--gold);color:#000;font-weight:600;}
+.popup-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+.tag{padding:4px 12px;border-radius:20px;font-size:11px;border:1px solid #2a2a2a;color:var(--muted);}
+.tag.spicy{border-color:#8B2500;color:#e05252;}
+.tag.popular{border-color:var(--gold-dim);color:var(--gold);}
+.ing-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;}
+.ing-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.chip{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid #2a2a2a;color:var(--text);cursor:pointer;background:#181818;transition:all 0.15s;}
+.chip:active{background:var(--gold);color:#000;transform:scale(0.95);}
+.chip.tapped{border-color:var(--gold-dim);color:var(--gold);}
+.popup-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin-bottom:14px;}
+.dot-pulse{display:flex;gap:4px;}
+.dot-pulse span{width:6px;height:6px;background:var(--gold-dim);border-radius:50%;animation:dotpulse 1.2s infinite;}
+.dot-pulse span:nth-child(2){animation-delay:0.2s;}
+.dot-pulse span:nth-child(3){animation-delay:0.4s;}
+@keyframes dotpulse{0%,80%,100%{opacity:0.3;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+.popup-desc{font-size:14px;color:#b0a898;line-height:1.7;margin-bottom:18px;min-height:50px;}
+.popup-add-btn{width:100%;background:var(--gold);color:#000;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;}
+
+/* ING POPUP */
+.ing-popup{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:#1a1a1a;border-radius:20px 20px 0 0;z-index:700;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);padding:0 0 40px;border-top:1px solid #2a2a2a;}
+.ing-popup.open{transform:translateX(-50%) translateY(0);}
+.ing-popup-handle{width:36px;height:4px;background:#333;border-radius:2px;margin:10px auto 0;}
+.ing-popup-body{padding:16px 22px 0;}
+.ing-popup-name{font-family:"Playfair Display",serif;font-size:20px;color:var(--gold);margin-bottom:8px;}
+.ing-lang-toggle{display:flex;gap:6px;margin-bottom:12px;}
+.ing-lang-btn{padding:4px 10px;border-radius:12px;border:none;background:#252525;color:var(--muted);font-size:11px;cursor:pointer;font-family:"DM Sans",sans-serif;transition:all 0.2s;}
+.ing-lang-btn.active{background:var(--gold);color:#000;font-weight:600;}
+.ing-desc{font-size:13px;color:#b0a898;line-height:1.7;min-height:40px;}
+
+/* SHEET */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.sheet-overlay.open{opacity:1;pointer-events:all;}
+.sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:var(--card);border-radius:24px 24px 0 0;z-index:900;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);max-height:92vh;overflow-y:auto;}
+.sheet.open{transform:translateX(-50%) translateY(0);}
+.sheet-handle{width:40px;height:4px;background:#333;border-radius:2px;margin:12px auto 0;}
+.sheet-header{padding:16px 20px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;}
+.sheet-title{font-family:"Playfair Display",serif;font-size:20px;color:var(--gold);}
+.sheet-close{width:32px;height:32px;background:#222;border:none;border-radius:50%;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* CART ITEMS */
+.cart-items{padding:16px 20px;}
+.cart-line{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e1e1e;}
+.cart-line-name{font-size:14px;}
+.cart-line-qty{font-size:12px;color:var(--muted);}
+.cart-line-price{font-family:"Playfair Display",serif;color:var(--gold);font-size:15px;}
+.cart-remove{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 8px;}
+
+/* UPSELL */
+.upsell-bar{margin:0 20px 16px;background:var(--card2);border-radius:12px;padding:12px 14px;border:1px solid #252525;}
+.upsell-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;}
+.upsell-items{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.upsell-items::-webkit-scrollbar{display:none;}
+.upsell-item{flex-shrink:0;background:var(--card);border:1px solid #2a2a2a;border-radius:10px;padding:8px 12px;cursor:pointer;transition:all 0.15s;}
+.upsell-item:active{border-color:var(--gold);transform:scale(0.97);}
+.upsell-item-name{font-size:12px;white-space:nowrap;}
+.upsell-item-price{font-size:11px;color:var(--gold);margin-top:2px;}
+
+/* SUMMARY */
+.cart-summary{padding:16px 20px;border-top:1px solid #222;}
+.summary-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;}
+.summary-row.total{font-size:18px;color:var(--text);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid #2a2a2a;}
+.summary-row.total span:last-child{font-family:"Playfair Display",serif;color:var(--gold);}
+.checkout-btn{width:100%;background:var(--gold);color:#000;border:none;border-radius:14px;padding:18px;font-size:16px;font-weight:700;cursor:pointer;margin:16px 0 8px;font-family:"DM Sans",sans-serif;}
+.pay-note{text-align:center;font-size:11px;color:var(--muted);padding-bottom:32px;}
+
+/* FULL SCREEN FLOWS */
+.flow-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;max-width:430px;margin:0 auto;opacity:0;pointer-events:none;transition:opacity 0.3s;overflow-y:auto;}
+.flow-screen.open{opacity:1;pointer-events:all;}
+.flow-header{padding:20px 20px 0;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.flow-back{width:36px;height:36px;background:var(--card);border:none;border-radius:50%;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.flow-title{font-family:"Playfair Display",serif;font-size:20px;color:var(--gold);}
+.flow-body{padding:24px 20px;flex:1;}
+
+/* STEP INDICATOR */
+.steps{display:flex;align-items:center;gap:6px;margin-bottom:28px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:#2a2a2a;transition:all 0.3s;}
+.step-dot.active{background:var(--gold);width:24px;border-radius:4px;}
+.step-dot.done{background:var(--gold-dim);}
+
+/* NAME SCREEN */
+.flow-label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:10px;}
+.flow-input{width:100%;background:var(--card);border:1px solid #2a2a2a;border-radius:12px;padding:16px;font-size:16px;color:var(--text);font-family:"DM Sans",sans-serif;outline:none;transition:border-color 0.2s;margin-bottom:20px;}
+.flow-input:focus{border-color:var(--gold-dim);}
+.flow-input::placeholder{color:var(--muted);}
+.order-review{background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:20px;border:1px solid #1e1e1e;}
+.order-review-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;}
+.order-review-line{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #1e1e1e;}
+.order-review-line:last-child{border:none;padding-top:8px;font-weight:600;color:var(--gold);}
+.flow-btn{width:100%;background:var(--gold);color:#000;border:none;border-radius:14px;padding:18px;font-size:16px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;margin-top:8px;}
+.flow-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* PAYMENT SCREEN */
+.pay-methods-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;}
+.pay-method-card{background:var(--card);border:1px solid #2a2a2a;border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.pay-method-card.selected{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.pay-method-card:active{transform:scale(0.97);}
+.pay-method-icon{font-size:28px;display:block;margin-bottom:8px;}
+.pay-method-name{font-size:13px;font-weight:500;}
+.pay-method-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* CARD FORM */
+.card-form{background:var(--card);border-radius:16px;padding:20px;margin-bottom:20px;border:1px solid #2a2a2a;}
+.card-form-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px;}
+.card-visual{background:linear-gradient(135deg,#1a1500,#2a2000);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid var(--gold-dim);}
+.card-chip{font-size:20px;margin-bottom:16px;}
+.card-number-display{font-family:"Playfair Display",serif;font-size:18px;letter-spacing:3px;color:var(--text);margin-bottom:12px;}
+.card-row{display:flex;justify-content:space-between;align-items:flex-end;}
+.card-label-small{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.card-value{font-size:13px;color:var(--text);}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+
+/* PROCESSING */
+.processing-screen{position:fixed;inset:0;background:var(--bg);z-index:1100;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:430px;margin:0 auto;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.processing-screen.open{opacity:1;pointer-events:all;}
+.processing-ring{width:80px;height:80px;border-radius:50%;border:3px solid #2a2a2a;border-top-color:var(--gold);animation:spin 0.8s linear infinite;margin-bottom:24px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.processing-text{font-size:16px;color:var(--muted);}
+.processing-sub{font-size:13px;color:#3a3a3a;margin-top:8px;}
+
+/* SUCCESS */
+.success-screen{position:fixed;inset:0;background:var(--bg);z-index:1200;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.4s;padding:32px 24px;max-width:430px;margin:0 auto;}
+.success-screen.open{opacity:1;pointer-events:all;}
+.success-icon{width:80px;height:80px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:20px;}
+.success-title{font-family:"Playfair Display",serif;font-size:28px;margin-bottom:4px;text-align:center;}
+.success-name{font-size:14px;color:var(--muted);margin-bottom:24px;}
+.buzzer-box{background:var(--card);border:2px solid var(--gold);border-radius:20px;padding:28px;text-align:center;width:100%;margin-bottom:20px;}
+.buzzer-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px;}
+.buzzer-num{font-family:"Playfair Display",serif;font-size:72px;color:var(--gold);line-height:1;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
+.buzzer-sub{font-size:13px;color:var(--muted);margin-top:8px;}
+.wait-time{font-size:12px;color:var(--gold-dim);margin-top:4px;}
+.success-note{font-size:12px;color:var(--muted);text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="brand">Bakso Baroka<span>Perth · Barrack St</span></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;"><div class="halal-badge">Halal Certified</div><div style="font-size:10px;color:var(--gold-dim);letter-spacing:1px;text-transform:uppercase;">⬛ SquareMenu</div></div>
+</div>
+
+<div class="cats">
+  <div class="cat active" onclick="showCat('bakso',this)">Bakso</div>
+  <div class="cat" onclick="showCat('indomie',this)">Indomie</div>
+  <div class="cat" onclick="showCat('extras',this)">Extras</div>
+  <div class="cat" onclick="showCat('drinks',this)">Drinks</div>
+</div>
+
+<div class="free-banner"><span>🥟</span> Free 2 Fried Wontons with every 5★ Google Review!</div>
+<div class="tap-hint"><span>👆</span> Tap any dish name to learn more</div>
+
+<div id="cat-bakso"><div class="section-title">Bakso</div><div class="menu-list" id="menu-bakso"></div></div>
+<div id="cat-indomie" style="display:none"><div class="section-title">Indomie</div><div class="menu-list" id="menu-indomie"></div></div>
+<div id="cat-extras" style="display:none"><div class="section-title">Extras</div><div class="extras-section" id="menu-extras"></div></div>
+<div id="cat-drinks" style="display:none"><div class="section-title">Drinks</div><div class="menu-list" id="menu-drinks" style="padding-bottom:100px"></div></div>
+
+<div class="cart-bar" id="cartBar" onclick="openCart()">
+  <div class="cart-count" id="cartCount">0</div>
+  <div style="font-weight:600;font-size:15px;">View Order</div>
+  <div class="cart-total" id="cartTotal">$0</div>
+</div>
+
+<!-- DISH POPUP -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup()"></div>
+<div class="dish-popup" id="dishPopup">
+  <button class="popup-close-btn" onclick="closePopup()">✕</button>
+  <div class="popup-handle"></div>
+  <div class="popup-img-wrap">
+    <div class="popup-img-placeholder" id="popupEmoji">🍜</div>
+    <img id="popupImg" src="" alt="" onload="this.classList.add('loaded')">
+  </div>
+  <div class="popup-body">
+    <div class="popup-dish-name" id="popupName"></div>
+    <div class="popup-price" id="popupPrice"></div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langEN" onclick="switchLang('en')">🇦🇺 English</button>
+      <button class="lang-btn" id="langID" onclick="switchLang('id')">🇮🇩 Bahasa</button>
+      <button class="lang-btn" id="langVN" onclick="switchLang('vn')">🇻🇳 Việt</button>
+    </div>
+    <div class="popup-tags" id="popupTags"></div>
+    <div class="ing-label">What's in it — tap to explore</div>
+    <div class="ing-chips" id="popupChips"></div>
+    <div class="popup-loading" id="popupLoading" style="display:none">
+      <div class="dot-pulse"><span></span><span></span><span></span></div>
+      <span>Getting dish details...</span>
+    </div>
+    <div class="popup-desc" id="popupDesc"></div>
+    <button class="popup-add-btn" id="popupAddBtn"><span>+</span> Add to Order</button>
+  </div>
+</div>
+
+<!-- ING POPUP -->
+<div class="ing-popup" id="ingPopup">
+  <div class="ing-popup-handle"></div>
+  <div class="ing-popup-body">
+    <div class="ing-popup-name" id="ingName"></div>
+    <div class="ing-lang-toggle">
+      <button class="ing-lang-btn active" id="ingLangEN" onclick="switchIngLang('en')">🇦🇺 English</button>
+      <button class="ing-lang-btn" id="ingLangID" onclick="switchIngLang('id')">🇮🇩 Bahasa</button>
+      <button class="ing-lang-btn" id="ingLangVN" onclick="switchIngLang('vn')">🇻🇳 Việt</button>
+    </div>
+    <div class="popup-loading" id="ingLoading" style="display:none">
+      <div class="dot-pulse"><span></span><span></span><span></span></div>
+      <span>Loading...</span>
+    </div>
+    <div class="ing-desc" id="ingDesc"></div>
+  </div>
+</div>
+
+<!-- CART SHEET -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeCart()"></div>
+<div class="sheet" id="cartSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">Your Order</div>
+    <button class="sheet-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="upsell-bar" id="upsellBar" style="display:none">
+    <div class="upsell-label">People also add</div>
+    <div class="upsell-items" id="upsellItems"></div>
+  </div>
+  <div class="cart-summary" id="cartSummary"></div>
+</div>
+
+<!-- STEP 1: NAME -->
+<div class="flow-screen" id="nameScreen">
+  <div class="flow-header">
+    <button class="flow-back" onclick="closeNameScreen()">←</button>
+    <div class="flow-title">Your Details</div>
+  </div>
+  <div class="flow-body">
+    <div class="steps">
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="flow-label">Your name for the order</div>
+    <input class="flow-input" id="nameInput" type="text" placeholder="e.g. Jon" autocomplete="given-name" oninput="updateNameBtn()">
+    <div class="order-review" id="nameOrderReview"></div>
+    <button class="flow-btn" id="nameNextBtn" onclick="goToPayment()" disabled>Continue to Payment →</button>
+  </div>
+</div>
+
+<!-- STEP 2: PAYMENT METHOD -->
+<div class="flow-screen" id="payMethodScreen">
+  <div class="flow-header">
+    <button class="flow-back" onclick="backToName()">←</button>
+    <div class="flow-title">Payment</div>
+  </div>
+  <div class="flow-body">
+    <div class="steps">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="flow-label">Choose payment method</div>
+    <div class="pay-methods-grid">
+      <div class="pay-method-card selected" id="pm-card" onclick="selectPayMethod('card')">
+        <span class="pay-method-icon">💳</span>
+        <div class="pay-method-name">Card</div>
+        <div class="pay-method-sub">Credit or debit</div>
+      </div>
+      <div class="pay-method-card" id="pm-apple" onclick="selectPayMethod('apple')">
+        <span class="pay-method-icon">📱</span>
+        <div class="pay-method-name">Apple Pay</div>
+        <div class="pay-method-sub">Touch ID / Face ID</div>
+      </div>
+      <div class="pay-method-card" id="pm-google" onclick="selectPayMethod('google')">
+        <span class="pay-method-icon">🟢</span>
+        <div class="pay-method-name">Google Pay</div>
+        <div class="pay-method-sub">Pay with Google</div>
+      </div>
+      <div class="pay-method-card" id="pm-payid" onclick="selectPayMethod('payid')">
+        <span class="pay-method-icon">🏦</span>
+        <div class="pay-method-name">PayID</div>
+        <div class="pay-method-sub">Bank transfer</div>
+      </div>
+    </div>
+    <div id="cardFormWrap">
+      <div class="card-form">
+        <div class="card-form-title">Card Details</div>
+        <div class="card-visual">
+          <div class="card-chip">▣</div>
+          <div class="card-number-display" id="cardNumDisplay">•••• •••• •••• ••••</div>
+          <div class="card-row">
+            <div>
+              <div class="card-label-small">Card Holder</div>
+              <div class="card-value" id="cardNameDisplay">YOUR NAME</div>
+            </div>
+            <div>
+              <div class="card-label-small">Expires</div>
+              <div class="card-value" id="cardExpDisplay">MM/YY</div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-label">Card number</div>
+        <input class="flow-input" id="cardNum" type="tel" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" style="margin-bottom:12px;">
+        <div class="input-row">
+          <div>
+            <div class="flow-label">Expiry</div>
+            <input class="flow-input" id="cardExp" type="tel" placeholder="MM/YY" maxlength="5" oninput="formatExp(this)">
+          </div>
+          <div>
+            <div class="flow-label">CVV</div>
+            <input class="flow-input" id="cardCvv" type="tel" placeholder="•••" maxlength="3">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="altPayWrap" style="display:none">
+      <div style="background:var(--card);border-radius:16px;padding:32px;text-align:center;border:1px solid #2a2a2a;margin-bottom:20px;">
+        <div style="font-size:48px;margin-bottom:12px;" id="altPayIcon">📱</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px;" id="altPayName">Apple Pay</div>
+        <div style="font-size:13px;color:var(--muted);">You'll be prompted to authenticate with Touch ID or Face ID</div>
+      </div>
+    </div>
+    <button class="flow-btn" onclick="processPayment()" id="payNowBtn">Pay $<span id="payAmount">0</span> Now →</button>
+  </div>
+</div>
+
+<!-- PROCESSING -->
+<div class="processing-screen" id="processingScreen">
+  <div class="processing-ring"></div>
+  <div class="processing-text" id="processingText">Processing payment...</div>
+  <div class="processing-sub" id="processingSub">Please don't close this page</div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Order Confirmed!</div>
+  <div class="success-name" id="successName"></div>
+  <div class="buzzer-box">
+    <div class="buzzer-label">Your Buzzer Number</div>
+    <div class="buzzer-num" id="buzzerNum">42</div>
+    <div class="buzzer-sub">We'll buzz you when it's ready 🔔</div>
+    <div class="wait-time" id="waitTime">Estimated wait: ~12 mins</div>
+  </div>
+  <div class="success-note">🥟 Leave a 5★ Google Review and get 2 free fried wontons on your next visit!</div>
+</div>
+
+<script>
+const MENU = {
+  bakso:[
+    {name:"Bakso Urat",ingredients:["Tendon Bakso","Small Bakso","Vermicelli","Yellow Noodle","Beef Broth"],price:15,emoji:"🍜",tags:["Popular","Chewy"]},
+    {name:"Bakso Telor",ingredients:["Egg Bakso","Small Bakso","Yellow Noodle","Vermicelli","Beef Broth"],price:15,emoji:"🥚",tags:["Egg Filled"]},
+    {name:"Bakso Malang",ingredients:["Small Bakso","Tofu","Wonton","Yellow Noodle","Vermicelli","Beef Broth"],price:15,emoji:"🍲",tags:["Most Filling"]},
+    {name:"Mie Ayam Bakso",ingredients:["Bakso","Dry Noodle","Chicken","Fried Wonton Skin","Chicken Broth"],price:15,emoji:"🍗",tags:["Dry Style"]},
+    {name:"Bakso Mercon",ingredients:["Chili Bakso","Small Bakso","Yellow Noodle","Vermicelli","Chilli","Beef Broth"],price:15,emoji:"🌶️",tags:["Spicy","Popular"]},
+    {name:"Bakso Beranak Urat",ingredients:["Pregnant Tendon Bakso","Vermicelli","Beef Broth"],price:20,emoji:"🍜",tags:["Premium","Large"]},
+    {name:"Bakso Beranak Mercon",ingredients:["Pregnant Chili Bakso","Beef Broth","Chilli"],price:20,emoji:"🌶️",tags:["Premium","Very Spicy"]},
+    {name:"Batagor",ingredients:["Fried Dumpling","Fried Tofu","Chicken Soup","Peanut Sauce"],price:12,emoji:"🥟",tags:["Bandung Style","Peanut Sauce"]},
+  ],
+  indomie:[
+    {name:"Plain Indomie",ingredients:["Indomie Noodle","Seasoning","Fried Shallots"],price:5,emoji:"🍝",tags:["Mild"]},
+    {name:"Plain Halal Buldak",ingredients:["Buldak Noodle","Spicy Sauce","Seaweed","Sesame"],price:6,emoji:"🔥",tags:["Very Spicy","Korean Style"]},
+  ],
+  drinks:[
+    {name:"Hot Kapal Api Coffee",ingredients:["Kapal Api Coffee","Hot Water"],price:3,emoji:"☕",tags:["Hot","Indonesian Coffee"]},
+    {name:"Hot Matcha",ingredients:["Matcha Powder","Hot Milk"],price:3,emoji:"🍵",tags:["Hot"]},
+    {name:"Hot Milk Tea Tarik",ingredients:["Black Tea","Condensed Milk","Evaporated Milk"],price:3,emoji:"🧋",tags:["Hot","Pulled Tea"]},
+    {name:"Hot Milo",ingredients:["Milo Powder","Hot Milk"],price:3,emoji:"🍫",tags:["Hot"]},
+    {name:"Fruit Ice Bowl (Es Buah)",ingredients:["Mixed Tropical Fruit","Coconut","Grass Jelly","Condensed Milk","Crushed Ice"],price:7,emoji:"🍓",tags:["Cold","Dessert"]},
+    {name:"Crushed Ice Matcha",ingredients:["Matcha","Crushed Ice","Milk","Sugar Syrup"],price:5,emoji:"🍵",tags:["Cold"]},
+    {name:"Ice Milk Tea Tarik",ingredients:["Black Tea","Condensed Milk","Crushed Ice"],price:3,emoji:"🧋",tags:["Cold"]},
+    {name:"Sweet Ice Tea",ingredients:["Black Tea","Sugar","Crushed Ice"],price:3,emoji:"🍹",tags:["Cold"]},
+    {name:"Ice Orange",ingredients:["Orange Juice","Crushed Ice","Sugar Syrup"],price:3,emoji:"🍊",tags:["Cold"]},
+    {name:"All Canned Drinks",ingredients:["Assorted Canned Beverages"],price:2,emoji:"🥤",tags:["Cold"]},
+  ]
+};
+const EXTRAS=[
+  {name:"Sausage",price:2},{name:"Egg",price:2},{name:"Bakso (extra)",price:2},
+  {name:"1 Urat/Telor",price:8},{name:"1 Normal Bakso",price:1.5},
+  {name:"Tofu",price:1.5},{name:"Fried Wonton",price:1.5},
+  {name:"Round Cracker",price:4},{name:"Gorengan",price:3},
+];
+const UPSELLS=[
+  {name:"Gorengan",price:3,emoji:"🍤"},{name:"Round Cracker",price:4,emoji:"🥮"},
+  {name:"Fried Wonton",price:1.5,emoji:"🥟"},{name:"Egg",price:2,emoji:"🥚"},
+];
+
+let cart={},currentPopupId=null,currentLang="en",currentIng=null,currentIngLang="en";
+const descCache={},ingCache={};
+let selectedPayMethod="card";
+
+// RENDER
+function renderMenuSection(cat,id){
+  const el=document.getElementById(id);
+  MENU[cat].forEach(function(item,i){
+    const itemId=cat+"-"+i;
+    const div=document.createElement("div");
+    div.className="item";div.id="item-"+itemId;
+    div.innerHTML='<div class="item-info">'+
+      '<div class="dish-name" onclick="openPopup(\''+itemId+'\')">'+item.name+'</div>'+
+      '<div class="item-desc">'+item.ingredients.join(" · ")+'</div>'+
+      '<div class="item-price">$'+item.price+'</div></div>'+
+      '<div class="qty-control" id="ctrl-'+itemId+'">'+
+      '<button class="qty-btn add-btn" onclick="addItem(\''+itemId+'\')">+</button></div>';
+    el.appendChild(div);
+  });
+}
+function renderExtras(){
+  const el=document.getElementById("menu-extras");
+  EXTRAS.forEach(function(item,i){
+    const id="extras-"+i;
+    const div=document.createElement("div");div.className="extra-item";
+    div.innerHTML='<div>'+item.name+'</div>'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+      '<div style="color:var(--gold-dim);font-size:13px">$'+item.price+'</div>'+
+      '<button class="extra-add" id="ea-'+id+'" onclick="toggleExtra(\''+id+'\',\''+item.name+'\','+item.price+')">+</button></div>';
+    el.appendChild(div);
+  });
+}
+
+// POPUP
+async function openPopup(id){
+  currentPopupId=id;currentLang="en";
+  document.getElementById("langEN").classList.add("active");
+  document.getElementById("langID").classList.remove("active");
+  document.getElementById("langVN").classList.remove("active");
+  closeIngPopup();
+  const parts=id.split("-"),item=MENU[parts[0]][parseInt(parts[1])];
+  document.getElementById("popupName").textContent=item.name;
+  document.getElementById("popupPrice").textContent="$"+item.price;
+  document.getElementById("popupEmoji").textContent=item.emoji;
+  document.getElementById("popupImg").classList.remove("loaded");
+  document.getElementById("popupImg").src="";
+  document.getElementById("popupDesc").textContent="";
+  document.getElementById("popupLoading").style.display="none";
+  const tagsEl=document.getElementById("popupTags");tagsEl.innerHTML="";
+  (item.tags||[]).forEach(function(t){
+    const s=document.createElement("span");
+    s.className="tag"+(t.toLowerCase().includes("spicy")?" spicy":t==="Popular"?" popular":"");
+    s.textContent=t;tagsEl.appendChild(s);
+  });
+  const chipsEl=document.getElementById("popupChips");chipsEl.innerHTML="";
+  (item.ingredients||[]).forEach(function(ing){
+    const c=document.createElement("span");c.className="chip";c.textContent=ing;
+    c.onclick=function(e){e.stopPropagation();openIngPopup(ing);};
+    chipsEl.appendChild(c);
+  });
+  document.getElementById("popupAddBtn").onclick=function(){addItem(id);closePopup();};
+  document.getElementById("dishPopup").classList.add("open");
+  document.getElementById("popupOverlay").classList.add("open");
+  loadDishImage(item.name);
+  await loadDesc(id,"en");
+  loadDesc(id,"id");
+}
+function loadDishImage(name){
+  const q={
+    "Bakso Urat":"bakso+meatball+soup+indonesian","Bakso Telor":"bakso+egg+meatball",
+    "Bakso Malang":"bakso+malang+soup","Mie Ayam Bakso":"mie+ayam+chicken+noodle",
+    "Bakso Mercon":"spicy+bakso+chili","Batagor":"batagor+fried+dumpling",
+    "Plain Indomie":"indomie+noodle","Plain Halal Buldak":"korean+fire+noodle",
+    "Fruit Ice Bowl (Es Buah)":"es+buah+indonesian+fruit","Crushed Ice Matcha":"matcha+crushed+ice",
+  };
+  document.getElementById("popupImg").src="https://source.unsplash.com/800x500/?"+(q[name]||name.toLowerCase().replace(/ /g,"+")+"+food");
+}
+async function loadDesc(id,lang){
+  if(descCache[id]&&descCache[id][lang]){
+    if(currentPopupId===id&&currentLang===lang){
+      document.getElementById("popupLoading").style.display="none";
+      document.getElementById("popupDesc").textContent=descCache[id][lang];
+    }return;
+  }
+  if(currentPopupId===id&&currentLang===lang){document.getElementById("popupLoading").style.display="flex";document.getElementById("popupDesc").textContent="";}
+  const parts=id.split("-"),item=MENU[parts[0]][parseInt(parts[1])];
+  try{
+    const sysEN="You are a friendly Indonesian food guide for Australian diners. In 2-3 sentences describe this dish: origin, taste, texture, and a pronunciation tip if useful. Plain text only.";
+    const sysID="Kamu pemandu kuliner untuk diaspora Indonesia. 2-3 kalimat tentang hidangan ini: asal, rasa, tekstur, kenangan. Bahasa santai. Plain text.";
+    const sysVN="Bạn là hướng dẫn ẩm thực cho người Việt xa quê. Viết 2-3 câu về món ăn này: nguồn gốc, hương vị, kết cấu, kỷ niệm. Tiếng Việt thân mật. Chỉ văn xuôi thuần túy.";
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:lang==="id"?sysID:lang==="vn"?sysVN:sysEN,messages:[{role:"user",content:"Dish: "+item.name+"\nIngredients: "+item.ingredients.join(", ")}]})});
+    const d=await r.json();
+    if(!descCache[id])descCache[id]={};
+    descCache[id][lang]=d.content[0].text;
+    if(currentPopupId===id&&currentLang===lang){document.getElementById("popupLoading").style.display="none";document.getElementById("popupDesc").textContent=descCache[id][lang];}
+  }catch(e){if(currentPopupId===id&&currentLang===lang){document.getElementById("popupLoading").style.display="none";document.getElementById("popupDesc").textContent=lang==="en"?"A delicious Indonesian dish.":lang==="vn"?"Một món ăn Indonesia thơm ngon.":"Hidangan Indonesia yang lezat.";}}
+}
+function switchLang(lang){
+  currentLang=lang;
+  document.getElementById("langEN").classList.toggle("active",lang==="en");
+  document.getElementById("langID").classList.toggle("active",lang==="id");
+  document.getElementById("langVN").classList.toggle("active",lang==="vn");
+  if(currentPopupId){
+    if(descCache[currentPopupId]&&descCache[currentPopupId][lang]){document.getElementById("popupLoading").style.display="none";document.getElementById("popupDesc").textContent=descCache[currentPopupId][lang];}
+    else loadDesc(currentPopupId,lang);
+  }
+}
+function closePopup(){currentPopupId=null;document.getElementById("dishPopup").classList.remove("open");document.getElementById("popupOverlay").classList.remove("open");closeIngPopup();}
+
+// ING POPUP
+async function openIngPopup(ing){
+  currentIng=ing;currentIngLang="en";
+  document.getElementById("ingName").textContent=ing;
+  document.getElementById("ingDesc").textContent="";
+  document.getElementById("ingLangEN").classList.add("active");
+  document.getElementById("ingLangID").classList.remove("active");
+  document.getElementById("ingLangVN").classList.remove("active");
+  document.getElementById("ingPopup").classList.add("open");
+  document.querySelectorAll(".chip").forEach(function(c){c.classList.toggle("tapped",c.textContent===ing);});
+  await loadIngDesc(ing,"en");loadIngDesc(ing,"id");
+}
+function closeIngPopup(){document.getElementById("ingPopup").classList.remove("open");document.querySelectorAll(".chip").forEach(function(c){c.classList.remove("tapped");});currentIng=null;}
+function switchIngLang(lang){
+  currentIngLang=lang;
+  document.getElementById("ingLangEN").classList.toggle("active",lang==="en");
+  document.getElementById("ingLangID").classList.toggle("active",lang==="id");
+  document.getElementById("ingLangVN").classList.toggle("active",lang==="vn");
+  if(currentIng){if(ingCache[currentIng]&&ingCache[currentIng][lang]){document.getElementById("ingLoading").style.display="none";document.getElementById("ingDesc").textContent=ingCache[currentIng][lang];}else loadIngDesc(currentIng,lang);}
+}
+async function loadIngDesc(ing,lang){
+  if(ingCache[ing]&&ingCache[ing][lang]){if(currentIng===ing&&currentIngLang===lang){document.getElementById("ingLoading").style.display="none";document.getElementById("ingDesc").textContent=ingCache[ing][lang];}return;}
+  if(currentIng===ing&&currentIngLang===lang){document.getElementById("ingLoading").style.display="flex";document.getElementById("ingDesc").textContent="";}
+  try{
+    const sysEN="Indonesian food expert. 2 sentences: what is this ingredient, how used in Indonesian cooking, what it tastes like. Plain text only.";
+    const sysID="Ahli kuliner Indonesia. 2 kalimat: apa bahan ini, cara penggunaan, rasanya. Bahasa santai. Plain text.";
+    const sysVN="Chuyên gia ẩm thực. 2 câu: nguyên liệu này là gì, dùng như thế nào trong nấu ăn Indonesia, vị như thế nào. Tiếng Việt tự nhiên. Chỉ văn xuôi.";
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:lang==="id"?sysID:lang==="vn"?sysVN:sysEN,messages:[{role:"user",content:"Ingredient: "+ing}]})});
+    const d=await r.json();
+    if(!ingCache[ing])ingCache[ing]={};
+    ingCache[ing][lang]=d.content[0].text;
+    if(currentIng===ing&&currentIngLang===lang){document.getElementById("ingLoading").style.display="none";document.getElementById("ingDesc").textContent=ingCache[ing][lang];}
+  }catch(e){if(currentIng===ing&&currentIngLang===lang){document.getElementById("ingLoading").style.display="none";document.getElementById("ingDesc").textContent=lang==="en"?"A key ingredient in Indonesian cuisine.":lang==="vn"?"Một nguyên liệu quan trọng trong ẩm thực Indonesia.":"Bahan penting dalam masakan Indonesia.";}}
+}
+
+// CART
+function addItem(id){
+  const parts=id.split("-"),item=MENU[parts[0]][parseInt(parts[1])];
+  if(!cart[id])cart[id]={name:item.name,price:item.price,qty:0};
+  cart[id].qty++;updateCtrl(id);updateCartBar();
+}
+function removeItem(id){
+  if(!cart[id])return;cart[id].qty--;
+  if(cart[id].qty<=0)delete cart[id];
+  updateCtrl(id);updateCartBar();
+}
+function toggleExtra(id,name,price){
+  const btn=document.getElementById("ea-"+id);
+  if(cart[id]){delete cart[id];btn.classList.remove("added");btn.textContent="+";}
+  else{cart[id]={name:name,price:price,qty:1};btn.classList.add("added");btn.textContent="✓";}
+  updateCartBar();
+}
+function updateCtrl(id){
+  const ctrl=document.getElementById("ctrl-"+id);if(!ctrl)return;
+  const itemEl=document.getElementById("item-"+id);
+  const qty=cart[id]?cart[id].qty:0;
+  if(qty===0){ctrl.innerHTML='<button class="qty-btn add-btn" onclick="addItem(\''+id+'\')">+</button>';if(itemEl)itemEl.classList.remove("in-cart");}
+  else{ctrl.innerHTML='<button class="qty-btn" onclick="removeItem(\''+id+'\')">−</button><span class="qty-num">'+qty+'</span><button class="qty-btn add-btn" onclick="addItem(\''+id+'\')">+</button>';if(itemEl)itemEl.classList.add("in-cart");}
+}
+function getTotal(){return Object.values(cart).reduce(function(s,v){return s+v.price*v.qty;},0);}
+function getCount(){return Object.values(cart).reduce(function(s,v){return s+v.qty;},0);}
+function updateCartBar(){
+  const count=getCount();
+  document.getElementById("cartCount").textContent=count;
+  document.getElementById("cartTotal").textContent="$"+getTotal().toFixed(2);
+  document.getElementById("cartBar").classList.toggle("visible",count>0);
+}
+
+function openCart(){renderCartSheet();document.getElementById("cartSheet").classList.add("open");document.getElementById("sheetOverlay").classList.add("open");}
+function closeCart(){document.getElementById("cartSheet").classList.remove("open");document.getElementById("sheetOverlay").classList.remove("open");}
+function removeFromCart(id){delete cart[id];updateCtrl(id);updateCartBar();renderCartSheet();if(getCount()===0)closeCart();}
+
+function renderCartSheet(){
+  const el=document.getElementById("cartItems"),sum=document.getElementById("cartSummary");
+  el.innerHTML="";
+  const items=Object.entries(cart);
+  if(!items.length){el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">No items yet</p>';sum.innerHTML="";document.getElementById("upsellBar").style.display="none";return;}
+  items.forEach(function(entry){
+    const id=entry[0],item=entry[1];
+    const row=document.createElement("div");row.className="cart-line";
+    row.innerHTML='<div><div class="cart-line-name">'+item.name+'</div><div class="cart-line-qty">x'+item.qty+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px"><div class="cart-line-price">$'+(item.price*item.qty).toFixed(2)+'</div>'+
+      '<button class="cart-remove" onclick="removeFromCart(\''+id+'\')">✕</button></div>';
+    el.appendChild(row);
+  });
+  // Upsell
+  const upsellBar=document.getElementById("upsellBar"),upsellItems=document.getElementById("upsellItems");
+  upsellItems.innerHTML="";upsellBar.style.display="block";
+  UPSELLS.forEach(function(u,i){
+    const id="extras-"+(EXTRAS.findIndex(function(e){return e.name===u.name;}));
+    if(cart[id])return;
+    const div=document.createElement("div");div.className="upsell-item";
+    div.onclick=function(){toggleExtra(id,u.name,u.price);renderCartSheet();};
+    div.innerHTML='<div style="font-size:20px">'+u.emoji+'</div><div class="upsell-item-name">'+u.name+'</div><div class="upsell-item-price">$'+u.price+'</div>';
+    upsellItems.appendChild(div);
+  });
+  const total=getTotal();
+  sum.innerHTML='<div class="summary-row"><span>Subtotal</span><span>$'+total.toFixed(2)+'</span></div>'+
+    '<div class="summary-row"><span>GST included</span><span>$'+(total/11).toFixed(2)+'</span></div>'+
+    '<div class="summary-row total"><span>Total</span><span>$'+total.toFixed(2)+'</span></div>'+
+    '<button class="checkout-btn" onclick="goToName()">Checkout →</button>'+
+    '<div class="pay-note">Powered by SquareMenu · Secure checkout</div>';
+}
+
+// CHECKOUT FLOW
+function goToName(){
+  closeCart();
+  renderNameReview();
+  document.getElementById("nameInput").value="";
+  document.getElementById("nameNextBtn").disabled=true;
+  document.getElementById("nameScreen").classList.add("open");
+}
+function closeNameScreen(){document.getElementById("nameScreen").classList.remove("open");openCart();}
+function updateNameBtn(){document.getElementById("nameNextBtn").disabled=document.getElementById("nameInput").value.trim().length<2;}
+function renderNameReview(){
+  const el=document.getElementById("nameOrderReview");
+  let html='<div class="order-review-title">Order Summary</div>';
+  Object.values(cart).forEach(function(item){html+='<div class="order-review-line"><span>'+item.name+' x'+item.qty+'</span><span>$'+(item.price*item.qty).toFixed(2)+'</span></div>';});
+  html+='<div class="order-review-line"><span>Total</span><span>$'+getTotal().toFixed(2)+'</span></div>';
+  el.innerHTML=html;
+}
+function goToPayment(){
+  document.getElementById("nameScreen").classList.remove("open");
+  document.getElementById("payAmount").textContent=getTotal().toFixed(2);
+  document.getElementById("payMethodScreen").classList.add("open");
+}
+function backToName(){document.getElementById("payMethodScreen").classList.remove("open");document.getElementById("nameScreen").classList.add("open");}
+
+function selectPayMethod(method){
+  selectedPayMethod=method;
+  ["card","apple","google","payid"].forEach(function(m){document.getElementById("pm-"+m).classList.toggle("selected",m===method);});
+  document.getElementById("cardFormWrap").style.display=method==="card"?"block":"none";
+  document.getElementById("altPayWrap").style.display=method!=="card"?"block":"none";
+  if(method==="apple"){document.getElementById("altPayIcon").textContent="📱";document.getElementById("altPayName").textContent="Apple Pay";}
+  else if(method==="google"){document.getElementById("altPayIcon").textContent="🟢";document.getElementById("altPayName").textContent="Google Pay";}
+  else if(method==="payid"){document.getElementById("altPayIcon").textContent="🏦";document.getElementById("altPayName").textContent="PayID";}
+}
+
+function formatCard(inp){
+  let v=inp.value.replace(/\D/g,"").substring(0,16);
+  inp.value=v.replace(/(.{4})/g,"$1 ").trim();
+  document.getElementById("cardNumDisplay")=inp.value||"•••• •••• •••• ••••";
+  const disp=v.length>0?v.replace(/(.{4})/g,"$1 ").trim():"•••• •••• •••• ••••";
+  document.getElementById("cardNumDisplay").textContent=disp;
+  const name=document.getElementById("nameInput").value||"YOUR NAME";
+  document.getElementById("cardNameDisplay").textContent=name.toUpperCase();
+}
+function formatExp(inp){
+  let v=inp.value.replace(/\D/g,"");
+  if(v.length>=2)v=v.substring(0,2)+"/"+v.substring(2,4);
+  inp.value=v;
+  document.getElementById("cardExpDisplay").textContent=inp.value||"MM/YY";
+}
+
+async function processPayment(){
+  document.getElementById("payMethodScreen").classList.remove("open");
+  document.getElementById("processingScreen").classList.add("open");
+  const steps=[
+    {text:"Connecting to Square...",sub:"Establishing secure connection"},
+    {text:"Processing payment...",sub:"Please don't close this page"},
+    {text:"Payment approved ✓",sub:"Placing your order..."},
+  ];
+  for(let i=0;i<steps.length;i++){
+    document.getElementById("processingText").textContent=steps[i].text;
+    document.getElementById("processingSub").textContent=steps[i].sub;
+    await new Promise(function(r){setTimeout(r,1000);});
+  }
+  document.getElementById("processingScreen").classList.remove("open");
+  const buzzer=Math.floor(10+Math.random()*89);
+  const wait=Math.floor(8+Math.random()*12);
+  document.getElementById("buzzerNum").textContent=buzzer;
+  document.getElementById("waitTime").textContent="Estimated wait: ~"+wait+" mins";
+  const name=document.getElementById("nameInput").value||"there";
+  document.getElementById("successName").textContent="Thanks "+name+"! Your order is confirmed.";
+  document.getElementById("successScreen").classList.add("open");
+  cart={};updateCartBar();
+}
+
+function showCat(cat,el){
+  ["bakso","indomie","extras","drinks"].forEach(function(c){document.getElementById("cat-"+c).style.display=c===cat?"block":"none";});
+  document.querySelectorAll(".cat").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");
+}
+
+renderMenuSection("bakso","menu-bakso");
+renderMenuSection("indomie","menu-indomie");
+renderExtras();
+renderMenuSection("drinks","menu-drinks");
+</script>
+</body>
+</html>
